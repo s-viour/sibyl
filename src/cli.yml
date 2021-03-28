@@ -1,0 +1,13 @@
+name: sibyl
+version: "0.1.0"
+author: matt wyatt <mwyatt1000@gmail.com>
+about: process manager for linux-based systems
+subcommands:
+  - once:
+      about: runs a one-off program and stores it in a temporary log file
+      version: "0.1.0"
+      args:
+        - cmd:
+            help: the command to execute
+            required: true
+            multiple: true

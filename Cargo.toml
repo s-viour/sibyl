@@ -1,0 +1,17 @@
+[package]
+name = "sibyl"
+version = "0.1.0"
+authors = ["matt wyatt <mwyatt1000@gmail.com>"]
+edition = "2018"
+
+
+[dependencies]
+anyhow = "1.0"
+bincode = "1.3.2"
+clap = {version = "~2.27.0", features = ["yaml"]}
+# commented out cos we're not using it right now
+# ctrlc = { version = "3.0", features = ["termination"] }
+env_logger = "0.8.3"
+log = "0.4.14"
+lockfile = "0.2.2"
+serde = { version = "1.0.124", features = ["derive"] }
