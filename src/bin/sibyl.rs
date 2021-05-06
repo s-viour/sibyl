@@ -23,9 +23,13 @@ fn main() -> Result<()> {
         }
     };
     
-    let req = build_request(&matches);
-    client.send(&req)
-        .context("failed to make request to daemon")?;
+    match build_request(&matches) {
+        Some(req) => client.send(&req)?,
+        None =>  {
+            println!("invalid command\n{}", matches.usage());
+            return Ok(());
+        }
+    }
 
 
     let res = client.receive()
@@ -35,16 +39,16 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn build_request(matches: &ArgMatches) -> Request {
+fn build_request(matches: &ArgMatches) -> Option<Request> {
     let command: Cmd;
     
     if let Some(matches) = matches.subcommand_matches("once") {
         command = Cmd::Once(CmdOnce::new(matches));
     } else {
-        command = Cmd::Nop;
+        return None;
     }
 
-    Request {
+    Some(Request {
         command,
-    }
+    })
 }
