@@ -1,23 +1,26 @@
 extern crate anyhow;
+extern crate dirs;
 #[macro_use]
 extern crate log;
 extern crate lockfile;
 
 use std::io::Write;
 use std::net::TcpListener;
-use std::path::Path;
 use anyhow::Result;
 use sibyl::{Request, processing::process_command, logging::LogHandler};
 
 
 fn main() -> Result<()> {
-    // TODO: set env logger to read from environment variable SIBYL_LOG
-    env_logger::init();
+    // use environment variable SIBYL_LOG for loglevel settings
+    env_logger::Builder::from_env("SIBYL_LOG").init();
 
     let listener = TcpListener::bind("127.0.0.1:52452")?;
     info!("bound to port 52452");
-    // TODO: change this to actually be a reasonable directory
-    let path = Path::new("/tmp/sibyllog");
+    
+    // get (or create, if it does not exist) the log directory
+    let mut path = dirs::data_local_dir().unwrap();
+    path.push("sibyllogs");
+
     let mut log_handler = LogHandler::new(&path);
 
     for connection in listener.incoming() {
