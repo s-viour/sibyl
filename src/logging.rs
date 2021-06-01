@@ -8,8 +8,7 @@ use log::{debug};
 // that requires the loghandler to be able
 // to create a log file for it
 pub trait LogName {
-    // TODO: consider changing this to be Path instead of String
-    fn log_name(&self) -> String;
+    fn log_name(&self) -> PathBuf;
 }
 
 pub struct LogFile {
@@ -30,7 +29,7 @@ impl LogFile {
 
 pub struct LogHandler {
     directory: PathBuf,
-    logs: HashMap<String, LogFile>,
+    logs: HashMap<PathBuf, LogFile>,
 }
 
 impl LogHandler {
@@ -42,6 +41,10 @@ impl LogHandler {
             directory,
             logs: HashMap::new(),
         }
+    }
+
+    pub fn log_directory(&self) -> &Path {
+        &self.directory.as_path()
     }
 
     pub fn create_log(&mut self, name: &impl LogName) -> Result<&LogFile> {

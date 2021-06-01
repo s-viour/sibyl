@@ -11,3 +11,6 @@ subcommands:
             help: the command to execute
             required: true
             multiple: true
+  - latest:
+      about: prints the latest log in the default log directory
+      version: "0.1.0"

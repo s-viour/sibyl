@@ -26,7 +26,7 @@ fn main() -> Result<()> {
     match build_request(&matches) {
         Some(req) => client.send(&req)?,
         None =>  {
-            println!("invalid command\n{}", matches.usage());
+            println!("no command specified\n{}", matches.usage());
             return Ok(());
         }
     }
@@ -44,6 +44,8 @@ fn build_request(matches: &ArgMatches) -> Option<Request> {
     
     if let Some(matches) = matches.subcommand_matches("once") {
         command = Cmd::Once(CmdOnce::new(matches));
+    } else if let Some(matches) = matches.subcommand_matches("latest") {
+        command = Cmd::Latest(CmdLatest::new(matches));
     } else {
         return None;
     }

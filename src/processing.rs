@@ -1,5 +1,9 @@
 use std::convert::From;
+use std::fs::{OpenOptions, metadata, read_dir};
+use std::io::Read;
+use std::path::PathBuf;
 use std::process::{Command, Stdio};
+use std::time::SystemTime;
 use anyhow::{Context, Result};
 use log::{info};
 use crate::Response;
@@ -20,6 +24,15 @@ pub fn process_command(log_handler: &mut LogHandler, cmd: &Cmd) -> Response {
                 }
             }
         }
+        Cmd::Latest(_) => match latest(log_handler) {
+            Ok(r) => r,
+            Err(e) => {
+                info!("failed to execute a Latest command");
+                Response {
+                    msg: format!("error: {}", e),
+                }
+            }
+        }
     }
 }
 
@@ -35,5 +48,32 @@ fn once(log_handler: &mut LogHandler, info: &CmdOnce) -> Result<Response> {
 
     Ok(Response {
         msg: format!("successfully executed process: {}", &info.program),
+    })
+}
+
+fn latest(log_handler: &mut LogHandler) -> Result<Response> {
+    let path = log_handler.log_directory();
+    let mut latest_file = PathBuf::new();
+    let mut last_modified = SystemTime::UNIX_EPOCH;
+
+    for file in read_dir(path)? {
+        let file = file?;
+        let ftime = metadata(file.path())?.modified()?;
+        if ftime > last_modified {
+            last_modified = ftime;
+            latest_file = file.path();
+        }
+    }
+
+    let mut file = OpenOptions::new()
+        .read(true)
+        .write(false)
+        .open(latest_file)?;
+
+    let mut s = String::new();
+    file.read_to_string(&mut s)?;
+
+    Ok(Response {
+        msg: s,
     })
 }
