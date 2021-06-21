@@ -4,10 +4,9 @@ extern crate dirs;
 extern crate log;
 extern crate lockfile;
 
-use std::io::Write;
 use std::net::TcpListener;
 use anyhow::Result;
-use sibyl::{Request, processing::process_command, logging::LogHandler};
+use sibyl::{Request, processing::process_command, logging::LogHandler, send_response};
 
 
 fn main() -> Result<()> {
@@ -31,7 +30,7 @@ fn main() -> Result<()> {
 
                 let res = process_command(&mut log_handler, &got.command);
 
-                stream.write(&bincode::serialize(&res)?)?;
+                send_response(&mut stream, &res)?;
                 debug!("sent response: {:?}", res);
             },
             Err(e) => warn!("connection failed: {}", e),

@@ -13,8 +13,7 @@ use bincode;
 use serde::{Serialize, Deserialize};
 use commands::*;
 
-const SERDE_SIZE: usize = 4096;
-
+//const SERDE_SIZE: usize = 4096;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Request {
@@ -23,10 +22,8 @@ pub struct Request {
 
 impl Request {
     pub fn read(stream: &mut TcpStream) -> Result<Request> {
-        let mut buffer: [u8; SERDE_SIZE] = [0; SERDE_SIZE];
-        stream.read(&mut buffer)?;
-
-        Ok(bincode::deserialize(&buffer)?)
+        let data = read_reqres(stream)?;
+        Ok(bincode::deserialize(&data)?)
     }
 }
 
@@ -37,10 +34,8 @@ pub struct Response {
 
 impl Response {
     pub fn read(stream: &mut TcpStream) -> Result<Response> {
-        let mut buffer: [u8; SERDE_SIZE] = [0; SERDE_SIZE];
-        stream.read(&mut buffer)?;
-
-        Ok(bincode::deserialize(&buffer)?)
+        let data = read_reqres(stream)?;
+        Ok(bincode::deserialize(&data)?)
     }
 }
 
@@ -63,17 +58,37 @@ impl Client {
 
     pub fn send(&mut self, msg: &Request) -> Result<()> {
         let serialized: Vec<u8> = bincode::serialize(&msg)?;
+        let size: Vec<u8> = bincode::serialize(&serialized.len())?;
         
+        &self.connection.write(&size)?;
         &self.connection.write(&serialized)?;
 
         Ok(())
     }
 
     pub fn receive(&mut self) -> Result<Response> {
-        let mut buffer: [u8; SERDE_SIZE] = [0; SERDE_SIZE];
-
-        &self.connection.read(&mut buffer)?;
-        
-        Ok(bincode::deserialize(&buffer)?)
+        Response::read(&mut self.connection)
     }
+}
+
+pub fn send_response(conn: &mut TcpStream, res: &Response) -> Result<()> {
+    let serialized: Vec<u8> = bincode::serialize(&res)?;
+    let size: Vec<u8> = bincode::serialize(&serialized.len())?;
+    
+    conn.write(&size)?;
+    conn.write(&serialized)?;
+
+    Ok(())
+}
+
+fn read_reqres(stream: &mut TcpStream) -> Result<Vec<u8>> {
+    let mut size_buffer: [u8; 8] = [0; 8];
+    stream.read(&mut size_buffer)?;
+    let size: usize = bincode::deserialize(&size_buffer)?;
+
+    let mut buffer: Vec<u8> = Vec::new();
+    buffer.resize(size, 0);
+    stream.read(buffer.as_mut_slice())?;
+
+    Ok(buffer)
 }
