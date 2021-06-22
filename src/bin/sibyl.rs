@@ -12,6 +12,14 @@ fn main() -> Result<()> {
     let yaml = load_yaml!("../cli.yml");
     let matches = App::from_yaml(yaml).get_matches();
 
+    let req = match build_request(&matches) {
+        Some(req) => req,
+        None => {
+            println!("no command specified");
+            return Ok(())
+        }
+    };
+
     // this is a special case
     // we shouldn't even consider this a failure
     let mut client = match Client::connect() {
@@ -22,17 +30,10 @@ fn main() -> Result<()> {
             return Ok(());
         }
     };
-    
-    match build_request(&matches) {
-        Some(req) => client.send(&req)?,
-        None =>  {
-            println!("no command specified\n{}", matches.usage());
-            return Ok(());
-        }
-    }
 
-
-    let res = client.receive()
+    client.send_request(&req)
+        .context("failed to send request to server")?;
+    let res = client.receive_response()
         .context("failed to read response from daemon")?;
     println!("{}", res.msg);
 

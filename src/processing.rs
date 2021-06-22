@@ -12,9 +12,6 @@ use crate::logging::LogHandler;
 
 pub fn process_command(log_handler: &mut LogHandler, cmd: &Cmd) -> Response {
     match cmd {
-        Cmd::Nop => Response {
-            msg: "no operation performed".to_string(),
-        },
         Cmd::Once(info) => match once(log_handler, &info) {
             Ok(r) => r,
             Err(e) => {
@@ -23,7 +20,7 @@ pub fn process_command(log_handler: &mut LogHandler, cmd: &Cmd) -> Response {
                     msg: format!("error: {}", e),
                 }
             }
-        }
+        },
         Cmd::Latest(_) => match latest(log_handler) {
             Ok(r) => r,
             Err(e) => {

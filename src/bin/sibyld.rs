@@ -4,17 +4,21 @@ extern crate dirs;
 extern crate log;
 extern crate lockfile;
 
-use std::net::TcpListener;
-use anyhow::Result;
-use sibyl::{Request, processing::process_command, logging::LogHandler, send_response};
+//use std::net::TcpListener;
+use std::os::unix::net::UnixListener;
+use anyhow::{Context, Result};
+use sibyl::Client;
+use sibyl::processing::process_command;
+use sibyl::logging::LogHandler;
 
 
 fn main() -> Result<()> {
     // use environment variable SIBYL_LOG for loglevel settings
     env_logger::Builder::from_env("SIBYL_LOG").init();
 
-    let listener = TcpListener::bind("127.0.0.1:52452")?;
-    info!("bound to port 52452");
+    let listener = UnixListener::bind("/tmp/sibyl.sock")
+        .context("failed to create listener socket")?;
+    info!("created listener socket at /tmp/sibyl.sock!");
     
     // get (or create, if it does not exist) the log directory
     let mut path = dirs::data_local_dir().unwrap();
@@ -24,14 +28,35 @@ fn main() -> Result<()> {
 
     for connection in listener.incoming() {
         match connection {
-            Ok(mut stream) => {
-                let got = Request::read(&mut stream)?;
-                info!("got request: {:?}", got);
+            Ok(stream) => {
+                // create a client for each incoming stream
+                let mut client = Client::from_stream(stream);
+                
+                // match statement is here so we can handle failure gracefully
+                let req = match client.receive_request() {
+                    Ok(req) => {
+                        info!("got request: {:?}", req);
+                        req
+                    },
+                    Err(e) => {
+                        error!("failed to receive request: {}", e);
+                        continue;
+                    }
+                };
 
-                let res = process_command(&mut log_handler, &got.command);
-
-                send_response(&mut stream, &res)?;
-                debug!("sent response: {:?}", res);
+                // actually perform processing here
+                // and generate a response
+                let res = process_command(&mut log_handler, &req.command);
+                
+                match client.send_response(&res) {
+                    Ok(_) => {
+                        debug!("sent response: {:?}", res);
+                    },
+                    Err(e) => {
+                        error!("failed to send response: {}", e);
+                        continue;
+                    }
+                }
             },
             Err(e) => warn!("connection failed: {}", e),
         }

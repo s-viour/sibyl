@@ -19,7 +19,6 @@ pub trait Action {
 // in a Request to be executed
 #[derive(Serialize, Deserialize, Debug)]
 pub enum Cmd {
-    Nop,
     Once(CmdOnce),
     Latest(CmdLatest),
 }
