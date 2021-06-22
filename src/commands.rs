@@ -20,7 +20,8 @@ pub trait Action {
 #[derive(Serialize, Deserialize, Debug)]
 pub enum Cmd {
     Once(CmdOnce),
-    Latest(CmdLatest),
+    Latest,
+    Ping,
 }
 
 // action that describes a program to be run once
@@ -57,14 +58,5 @@ impl LogName for CmdOnce {
         path.push(v.join("_"));
 
         path
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct CmdLatest {}
-
-impl Action for CmdLatest {
-    fn new(_: &ArgMatches) -> Self {
-        CmdLatest {}
     }
 }

@@ -14,3 +14,7 @@ subcommands:
   - latest:
       about: prints the latest log in the default log directory
       version: "0.1.0"
+
+  - ping:
+      about: gets a reply from the server
+      version: "0.1.0"

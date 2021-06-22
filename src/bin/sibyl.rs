@@ -45,8 +45,10 @@ fn build_request(matches: &ArgMatches) -> Option<Request> {
     
     if let Some(matches) = matches.subcommand_matches("once") {
         command = Cmd::Once(CmdOnce::new(matches));
-    } else if let Some(matches) = matches.subcommand_matches("latest") {
-        command = Cmd::Latest(CmdLatest::new(matches));
+    } else if let Some(_) = matches.subcommand_matches("latest") {
+        command = Cmd::Latest;
+    } else if let Some(_) = matches.subcommand_matches("ping") {
+        command = Cmd::Ping;
     } else {
         return None;
     }

@@ -21,7 +21,7 @@ pub fn process_command(log_handler: &mut LogHandler, cmd: &Cmd) -> Response {
                 }
             }
         },
-        Cmd::Latest(_) => match latest(log_handler) {
+        Cmd::Latest => match latest(log_handler) {
             Ok(r) => r,
             Err(e) => {
                 info!("failed to execute a Latest command");
@@ -30,6 +30,7 @@ pub fn process_command(log_handler: &mut LogHandler, cmd: &Cmd) -> Response {
                 }
             }
         }
+        Cmd::Ping => Response { msg: "pong!".to_string() },
     }
 }
 
