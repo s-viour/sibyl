@@ -2,7 +2,6 @@ extern crate anyhow;
 extern crate dirs;
 #[macro_use]
 extern crate log;
-extern crate lockfile;
 
 //use std::net::TcpListener;
 use std::os::unix::net::UnixListener;
