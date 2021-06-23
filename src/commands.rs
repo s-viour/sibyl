@@ -4,14 +4,6 @@ use serde::{Serialize, Deserialize};
 use crate::logging::LogName;
 
 
-// trait that describes any type of 
-// command executable by the server
-// the new function builds an action for sending 
-// over the connection
-pub trait Action {
-    fn new(args: &ArgMatches) -> Self;
-}
-
 // enumeration over all possible commands
 // that can be executed by the server
 //
@@ -32,8 +24,8 @@ pub struct CmdOnce {
     pub args: Vec<String>,
 }
 
-impl Action for CmdOnce {
-    fn new(matches: &ArgMatches) -> Self {
+impl From<&ArgMatches<'_>> for CmdOnce {
+    fn from(matches: &ArgMatches) -> Self {
         let cmdline = matches.values_of("cmd")
             .unwrap()
             .collect::<Vec<_>>();

@@ -2,6 +2,7 @@ extern crate anyhow;
 #[macro_use]
 extern crate clap;
 
+use std::convert::From;
 use anyhow::{Context, Result};
 use clap::{App, ArgMatches};
 use sibyl::{Request, Client};
@@ -44,7 +45,7 @@ fn build_request(matches: &ArgMatches) -> Option<Request> {
     let command: Cmd;
     
     if let Some(matches) = matches.subcommand_matches("once") {
-        command = Cmd::Once(CmdOnce::new(matches));
+        command = Cmd::Once(CmdOnce::from(matches));
     } else if let Some(_) = matches.subcommand_matches("latest") {
         command = Cmd::Latest;
     } else if let Some(_) = matches.subcommand_matches("ping") {
