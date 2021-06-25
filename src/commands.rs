@@ -1,13 +1,22 @@
 use std::path::PathBuf;
+use std::process::{Command, Stdio};
 use clap::ArgMatches;
 use serde::{Serialize, Deserialize};
-use crate::logging::LogName;
+use crate::Response;
+use crate::logging::{LogHandler, LogName};
 use typetag;
+use anyhow::{Context, Result};
+use std::time::SystemTime;
+use std::fs::{OpenOptions, metadata, read_dir};
+use std::io::Read;
 
+pub struct CommandContext {
+    pub loghandler: LogHandler,
+}
 
 #[typetag::serde(tag = "type")]
-pub trait Command {
-    fn execute(&self);
+pub trait Action {
+    fn execute(&self, ctx: &mut CommandContext) -> Result<Response>;
 }
 
 // enumeration over all possible commands
@@ -60,9 +69,20 @@ impl LogName for CmdOnce {
 }
 
 #[typetag::serde]
-impl Command for CmdOnce {
-    fn execute(&self) {
-        println!("once command executed: {}", &self.program);
+impl Action for CmdOnce {
+    fn execute(&self, ctx: &mut CommandContext) -> Result<Response> {
+        let output_file = ctx.loghandler.create_log(self)?.open()?;
+
+        Command::new(&self.program)
+            .args(&self.args)
+            .stdout(Stdio::from(output_file))
+            .stderr(Stdio::null())
+            .spawn()
+            .context("failed to spawn process")?;
+
+        Ok(Response {
+            msg: format!("successfully executed process: {}", &self.program),
+        })
     }
 }
 
@@ -70,9 +90,32 @@ impl Command for CmdOnce {
 pub struct CmdLatest;
 
 #[typetag::serde]
-impl Command for CmdLatest {
-    fn execute(&self) {
-        println!("latest command executed");
+impl Action for CmdLatest {
+    fn execute(&self, ctx: &mut CommandContext) -> Result<Response> {
+        let path = ctx.loghandler.log_directory();
+        let mut latest_file = PathBuf::new();
+        let mut last_modified = SystemTime::UNIX_EPOCH;
+
+        for file in read_dir(path)? {
+            let file = file?;
+            let ftime = metadata(file.path())?.modified()?;
+            if ftime > last_modified {
+                last_modified = ftime;
+                latest_file = file.path();
+            }
+        }
+
+        let mut file = OpenOptions::new()
+            .read(true)
+            .write(false)
+            .open(latest_file)?;
+
+        let mut s = String::new();
+        file.read_to_string(&mut s)?;
+
+        Ok(Response {
+            msg: s,
+        })
     }
 }
 
@@ -80,8 +123,10 @@ impl Command for CmdLatest {
 pub struct CmdPing;
 
 #[typetag::serde]
-impl Command for CmdPing {
-    fn execute(&self) {
-        println!("ping commnad executed");
+impl Action for CmdPing {
+    fn execute(&self, _ctx: &mut CommandContext) -> Result<Response> {
+        Ok(Response {
+            msg: "pong!".to_string(),
+        })
     }
 }

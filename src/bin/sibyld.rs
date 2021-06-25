@@ -7,7 +7,8 @@ extern crate log;
 use std::os::unix::net::UnixListener;
 use anyhow::{Context, Result};
 use sibyl::{Client, Response};
-//use sibyl::logging::LogHandler;
+use sibyl::commands::{Action, CommandContext};
+use sibyl::logging::LogHandler;
 
 
 fn main() -> Result<()> {
@@ -22,7 +23,9 @@ fn main() -> Result<()> {
     let mut path = dirs::data_local_dir().unwrap();
     path.push("sibyllogs");
 
-    //let mut log_handler = LogHandler::new(&path);
+    let mut ctx = CommandContext {
+        loghandler: LogHandler::new(&path),
+    };
 
     for connection in listener.incoming() {
         match connection {
@@ -31,7 +34,6 @@ fn main() -> Result<()> {
                 let mut client = Client::from_stream(stream);
                 
                 // match statement is here so we can handle failure gracefully
-                
                 let req = match client.receive_request() {
                     Ok(req) => {
                         info!("got request");
@@ -43,14 +45,7 @@ fn main() -> Result<()> {
                     }
                 };
 
-                req.command.execute();
-
-                // actually perform processing here
-                // and generate a response
-                
-                let res = Response {
-                    msg: "response".to_string(),
-                };
+                let res = process_command(&req.command, &mut ctx);
                 
                 match client.send_response(&res) {
                     Ok(_) => {
@@ -68,4 +63,16 @@ fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+fn process_command(cmd: &Box<dyn Action>, ctx: &mut CommandContext) -> Response {
+    match cmd.execute(ctx) {
+        Ok(r) => r,
+        Err(e) => {
+            error!("failed to execute a command!");
+            Response {
+                msg: format!("an error occurred: {}", e),
+            }
+        }
+    }
 }

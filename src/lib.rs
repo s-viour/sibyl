@@ -5,7 +5,6 @@ extern crate typetag;
 
 pub mod commands;
 pub mod logging;
-pub mod processing;
 
 use std::io::{Read, Write};
 use std::os::unix::net::UnixStream;
@@ -17,7 +16,7 @@ use commands::*;
 
 #[derive(Serialize, Deserialize)]
 pub struct Request {
-    pub command: Box<dyn Command>,
+    pub command: Box<dyn Action>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

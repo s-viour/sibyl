@@ -42,7 +42,7 @@ fn main() -> Result<()> {
 }
 
 fn build_request(matches: &ArgMatches) -> Option<Request> {
-    let command: Box<dyn Command>;
+    let command: Box<dyn Action>;
     
     if let Some(matches) = matches.subcommand_matches("once") {
         command = Box::new(CmdOnce::from(matches));
