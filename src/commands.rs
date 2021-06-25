@@ -2,7 +2,13 @@ use std::path::PathBuf;
 use clap::ArgMatches;
 use serde::{Serialize, Deserialize};
 use crate::logging::LogName;
+use typetag;
 
+
+#[typetag::serde(tag = "type")]
+pub trait Command {
+    fn execute(&self);
+}
 
 // enumeration over all possible commands
 // that can be executed by the server
@@ -50,5 +56,32 @@ impl LogName for CmdOnce {
         path.push(v.join("_"));
 
         path
+    }
+}
+
+#[typetag::serde]
+impl Command for CmdOnce {
+    fn execute(&self) {
+        println!("once command executed: {}", &self.program);
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct CmdLatest;
+
+#[typetag::serde]
+impl Command for CmdLatest {
+    fn execute(&self) {
+        println!("latest command executed");
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct CmdPing;
+
+#[typetag::serde]
+impl Command for CmdPing {
+    fn execute(&self) {
+        println!("ping commnad executed");
     }
 }

@@ -6,9 +6,8 @@ extern crate log;
 //use std::net::TcpListener;
 use std::os::unix::net::UnixListener;
 use anyhow::{Context, Result};
-use sibyl::Client;
-use sibyl::processing::process_command;
-use sibyl::logging::LogHandler;
+use sibyl::{Client, Response};
+//use sibyl::logging::LogHandler;
 
 
 fn main() -> Result<()> {
@@ -23,7 +22,7 @@ fn main() -> Result<()> {
     let mut path = dirs::data_local_dir().unwrap();
     path.push("sibyllogs");
 
-    let mut log_handler = LogHandler::new(&path);
+    //let mut log_handler = LogHandler::new(&path);
 
     for connection in listener.incoming() {
         match connection {
@@ -32,9 +31,10 @@ fn main() -> Result<()> {
                 let mut client = Client::from_stream(stream);
                 
                 // match statement is here so we can handle failure gracefully
+                
                 let req = match client.receive_request() {
                     Ok(req) => {
-                        info!("got request: {:?}", req);
+                        info!("got request");
                         req
                     },
                     Err(e) => {
@@ -43,9 +43,14 @@ fn main() -> Result<()> {
                     }
                 };
 
+                req.command.execute();
+
                 // actually perform processing here
                 // and generate a response
-                let res = process_command(&mut log_handler, &req.command);
+                
+                let res = Response {
+                    msg: "response".to_string(),
+                };
                 
                 match client.send_response(&res) {
                     Ok(_) => {
@@ -56,6 +61,7 @@ fn main() -> Result<()> {
                         continue;
                     }
                 }
+                
             },
             Err(e) => warn!("connection failed: {}", e),
         }

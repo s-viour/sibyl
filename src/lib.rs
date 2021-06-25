@@ -1,6 +1,7 @@
 extern crate anyhow;
 extern crate log;
 extern crate serde;
+extern crate typetag;
 
 pub mod commands;
 pub mod logging;
@@ -14,9 +15,9 @@ use serde::{Serialize, Deserialize};
 use commands::*;
 
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize)]
 pub struct Request {
-    pub command: Cmd,
+    pub command: Box<dyn Command>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
