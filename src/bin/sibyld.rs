@@ -6,8 +6,8 @@ extern crate log;
 //use std::net::TcpListener;
 use std::os::unix::net::UnixListener;
 use anyhow::{Context, Result};
-use sibyl::Client;
-use sibyl::processing::process_command;
+use sibyl::{Client, Response};
+use sibyl::commands::{Action, CommandContext};
 use sibyl::logging::LogHandler;
 
 
@@ -23,7 +23,9 @@ fn main() -> Result<()> {
     let mut path = dirs::data_local_dir().unwrap();
     path.push("sibyllogs");
 
-    let mut log_handler = LogHandler::new(&path);
+    let mut ctx = CommandContext {
+        loghandler: LogHandler::new(&path),
+    };
 
     for connection in listener.incoming() {
         match connection {
@@ -34,7 +36,7 @@ fn main() -> Result<()> {
                 // match statement is here so we can handle failure gracefully
                 let req = match client.receive_request() {
                     Ok(req) => {
-                        info!("got request: {:?}", req);
+                        info!("got request");
                         req
                     },
                     Err(e) => {
@@ -43,9 +45,7 @@ fn main() -> Result<()> {
                     }
                 };
 
-                // actually perform processing here
-                // and generate a response
-                let res = process_command(&mut log_handler, &req.command);
+                let res = process_command(&req.command, &mut ctx);
                 
                 match client.send_response(&res) {
                     Ok(_) => {
@@ -56,10 +56,23 @@ fn main() -> Result<()> {
                         continue;
                     }
                 }
+                
             },
             Err(e) => warn!("connection failed: {}", e),
         }
     }
 
     Ok(())
+}
+
+fn process_command(cmd: &Box<dyn Action>, ctx: &mut CommandContext) -> Response {
+    match cmd.execute(ctx) {
+        Ok(r) => r,
+        Err(e) => {
+            error!("failed to execute a command!");
+            Response {
+                msg: format!("an error occurred: {}", e),
+            }
+        }
+    }
 }

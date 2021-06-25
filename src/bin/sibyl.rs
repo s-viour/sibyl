@@ -42,14 +42,14 @@ fn main() -> Result<()> {
 }
 
 fn build_request(matches: &ArgMatches) -> Option<Request> {
-    let command: Cmd;
+    let command: Box<dyn Action>;
     
     if let Some(matches) = matches.subcommand_matches("once") {
-        command = Cmd::Once(CmdOnce::from(matches));
+        command = Box::new(CmdOnce::from(matches));
     } else if let Some(_) = matches.subcommand_matches("latest") {
-        command = Cmd::Latest;
+        command = Box::new(CmdLatest)
     } else if let Some(_) = matches.subcommand_matches("ping") {
-        command = Cmd::Ping;
+        command = Box::new(CmdPing)
     } else {
         return None;
     }
