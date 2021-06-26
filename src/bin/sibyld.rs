@@ -3,7 +3,7 @@ extern crate dirs;
 #[macro_use]
 extern crate log;
 
-//use std::net::TcpListener;
+
 use std::os::unix::net::UnixListener;
 use anyhow::{Context, Result};
 use sibyl::{Client, Response};
