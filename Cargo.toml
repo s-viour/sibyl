@@ -14,9 +14,3 @@ env_logger = "0.8.3"
 log = "0.4.14"
 serde = { version = "1.0.124", features = ["derive"] }
 typetag = "0.1.7"
-
-# commented out cos we're not using it right now
-# ctrlc = { version = "3.0", features = ["termination"] }
-
-# commented out for now, we aren't using lockfile
-# lockfile = "0.2.2"
