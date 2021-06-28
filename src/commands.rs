@@ -10,36 +10,32 @@ use typetag;
 use crate::Response;
 use crate::logging::{LogHandler, LogName};
 
-
+/// structure containing all resources that commands may need to access
 pub struct CommandContext {
     pub loghandler: LogHandler,
 }
 
+/// trait that represents an action executable by the server
+/// 
+/// all command-structures implement this trait
 #[typetag::serde(tag = "type")]
 pub trait Action {
     fn execute(&self, ctx: &mut CommandContext) -> Result<Response>;
 }
 
-// enumeration over all possible commands
-// that can be executed by the server
-//
-// this is built by a client and sent to the server
-// in a Request to be executed
-#[derive(Serialize, Deserialize, Debug)]
-pub enum Cmd {
-    Once(CmdOnce),
-    Latest,
-    Ping,
-}
 
-// action that describes a program to be run once
-// with output logged and stored in a temporary file
+/// command-structure for the `once` command
+/// 
+/// action that describes a program to be run once
+/// with output logged and stored in a temporary file
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CmdOnce {
     pub program: String,
     pub args: Vec<String>,
 }
 
+// implement the ability to create a CmdOnce from clap's ArgMatches
+// consider moving this to a utility file or in sibyl.rs
 impl From<&ArgMatches<'_>> for CmdOnce {
     fn from(matches: &ArgMatches) -> Self {
         let cmdline = matches.values_of("cmd")
@@ -56,6 +52,7 @@ impl From<&ArgMatches<'_>> for CmdOnce {
     }
 }
 
+// implement LogName for Once since it requires the ability to create logfiles
 impl LogName for CmdOnce {
     fn log_name(&self) -> PathBuf {
         let mut v: Vec<&str> = vec![&self.program];
@@ -87,6 +84,9 @@ impl Action for CmdOnce {
     }
 }
 
+/// command-structure for the `latest` command
+/// 
+/// retrieves and sends the latest log file to the client
 #[derive(Serialize, Deserialize)]
 pub struct CmdLatest;
 
@@ -120,6 +120,10 @@ impl Action for CmdLatest {
     }
 }
 
+/// command-structure for the `ping` command
+/// 
+/// for now, just responds with 'pong!'
+// we should change this to actually time the ping
 #[derive(Serialize, Deserialize)]
 pub struct CmdPing;
 

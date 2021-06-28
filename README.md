@@ -1,0 +1,2 @@
+# sibyl
+sibyl is a WIP, cross-platform process manager for starting, stopping, logging, and monitoring raw processes. sibyl is currently in the early stages of development, and I'm not 100% sure what I'm doing. the [github project](https://github.com/s-viour/sibyl/projects/1) lists all my current thoughts and pursuits regarding the developement of sibyl.
