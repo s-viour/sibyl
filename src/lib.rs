@@ -1,4 +1,5 @@
 extern crate anyhow;
+extern crate chrono;
 extern crate log;
 extern crate serde;
 extern crate typetag;
@@ -9,6 +10,7 @@ pub mod logging;
 use std::io::{Read, Write};
 use std::os::unix::net::UnixStream;
 use anyhow::Result;
+use chrono::{DateTime, Utc};
 use bincode;
 use serde::{Serialize, Deserialize};
 use commands::*;
@@ -21,6 +23,7 @@ use commands::*;
 #[derive(Serialize, Deserialize)]
 pub struct Request {
     pub command: Box<dyn Action>,
+    pub time: DateTime<Utc>,
 }
 
 /// structure containing any information the client might report to the user

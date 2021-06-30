@@ -1,9 +1,11 @@
 extern crate anyhow;
+extern crate chrono;
 #[macro_use]
 extern crate clap;
 
 use std::convert::From;
 use anyhow::{Context, Result};
+use chrono::Utc;
 use clap::{App, ArgMatches};
 use sibyl::{Request, Client};
 use sibyl::commands::*;
@@ -56,5 +58,6 @@ fn build_request(matches: &ArgMatches) -> Option<Request> {
 
     Some(Request {
         command,
+        time: Utc::now(),
     })
 }

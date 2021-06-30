@@ -7,8 +7,8 @@ extern crate log;
 
 use std::os::unix::net::UnixListener;
 use anyhow::{Context, Result};
-use sibyl::{Client, Response};
-use sibyl::commands::{Action, CommandContext};
+use sibyl::{Client, Request, Response};
+use sibyl::commands::CommandContext;
 use sibyl::logging::LogHandler;
 
 
@@ -55,7 +55,7 @@ fn main() -> Result<()> {
                     }
                 };
 
-                let res = process_command(&req.command, &mut ctx);
+                let res = process_command(&req, &mut ctx);
                 
                 match client.send_response(&res) {
                     Ok(_) => {
@@ -75,8 +75,8 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn process_command(cmd: &Box<dyn Action>, ctx: &mut CommandContext) -> Response {
-    match cmd.execute(ctx) {
+fn process_command(req: &Request, ctx: &mut CommandContext) -> Response {
+    match req.command.execute(req, ctx) {
         Ok(r) => r,
         Err(e) => {
             error!("failed to execute a command!");
