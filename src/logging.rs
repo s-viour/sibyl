@@ -1,8 +1,8 @@
-use std::collections::HashMap;
-use std::fs::{File, OpenOptions, create_dir_all};
-use std::path::{Path, PathBuf};
 use anyhow::Result;
-use log::{debug};
+use log::debug;
+use std::collections::HashMap;
+use std::fs::{create_dir_all, File, OpenOptions};
+use std::path::{Path, PathBuf};
 
 /// trait that describes any command
 /// that requires the loghandler to be able

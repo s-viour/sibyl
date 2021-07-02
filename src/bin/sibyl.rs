@@ -3,13 +3,12 @@ extern crate chrono;
 #[macro_use]
 extern crate clap;
 
-use std::convert::From;
 use anyhow::{Context, Result};
 use chrono::Utc;
 use clap::{App, ArgMatches};
-use sibyl::{Request, Client};
 use sibyl::commands::*;
-
+use sibyl::{Client, Request};
+use std::convert::From;
 
 fn main() -> Result<()> {
     let yaml = load_yaml!("../cli.yml");
@@ -19,7 +18,7 @@ fn main() -> Result<()> {
         Some(req) => req,
         None => {
             println!("no command specified");
-            return Ok(())
+            return Ok(());
         }
     };
 
@@ -34,9 +33,11 @@ fn main() -> Result<()> {
         }
     };
 
-    client.send_request(&req)
+    client
+        .send_request(&req)
         .context("failed to send request to server")?;
-    let res = client.receive_response()
+    let res = client
+        .receive_response()
         .context("failed to read response from daemon")?;
     println!("{}", res.msg);
 
@@ -45,12 +46,12 @@ fn main() -> Result<()> {
 
 fn build_request(matches: &ArgMatches) -> Option<Request> {
     let command: Box<dyn Action>;
-    
+
     if let Some(matches) = matches.subcommand_matches("once") {
         command = Box::new(CmdOnce::from(matches));
-    } else if let Some(_) = matches.subcommand_matches("latest") {
+    } else if matches.subcommand_matches("latest").is_some() {
         command = Box::new(CmdLatest)
-    } else if let Some(_) = matches.subcommand_matches("ping") {
+    } else if matches.subcommand_matches("ping").is_some() {
         command = Box::new(CmdPing)
     } else {
         return None;
