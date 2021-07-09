@@ -1,4 +1,5 @@
 use crate::logging::{LogHandler, LogName};
+use crate::processing::ProcessHandler;
 use crate::{Request, Response};
 use anyhow::{Context, Result};
 use chrono::Utc;
@@ -14,6 +15,7 @@ use typetag;
 /// structure containing all resources that commands may need to access
 pub struct CommandContext {
     pub loghandler: LogHandler,
+    pub prochandler: ProcessHandler,
 }
 
 /// trait that represents an action executable by the server
@@ -68,15 +70,21 @@ impl Action for CmdOnce {
     fn execute(&self, _req: &Request, ctx: &mut CommandContext) -> Result<Response> {
         let output_file = ctx.loghandler.create_log(self)?.open()?;
 
-        Command::new(&self.program)
-            .args(&self.args)
+        let mut cmd = Command::new(&self.program);
+        cmd.args(&self.args)
             .stdout(Stdio::from(output_file))
-            .stderr(Stdio::null())
-            .spawn()
-            .context("failed to spawn process")?;
+            .stderr(Stdio::null());
+
+        let pid = ctx
+            .prochandler
+            .create_process(&self.program, &self.args, cmd)
+            .context("failed to create process!")?;
 
         Ok(Response {
-            msg: format!("successfully executed process: {}", &self.program),
+            msg: format!(
+                "successfully executed process: {} | sibyl pid: {}",
+                &self.program, pid
+            ),
         })
     }
 }

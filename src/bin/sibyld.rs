@@ -7,6 +7,7 @@ extern crate log;
 use anyhow::{Context, Result};
 use sibyl::commands::CommandContext;
 use sibyl::logging::LogHandler;
+use sibyl::processing::ProcessHandler;
 use sibyl::{Client, Request, Response};
 use std::os::unix::net::UnixListener;
 
@@ -35,6 +36,7 @@ fn main() -> Result<()> {
 
     let mut ctx = CommandContext {
         loghandler: LogHandler::new(&path),
+        prochandler: ProcessHandler::new(),
     };
 
     for connection in listener.incoming() {

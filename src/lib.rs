@@ -6,6 +6,7 @@ extern crate typetag;
 
 pub mod commands;
 pub mod logging;
+pub mod processing;
 
 use anyhow::Result;
 use chrono::{DateTime, Utc};
