@@ -34,13 +34,13 @@ impl ProcessHandler {
     /// * `cmd` - a Command structure to spawn from
     pub fn create_process(
         &mut self,
-        program: &String,
-        args: &Vec<String>,
+        program: &str,
+        args: &[String],
         mut command: Command,
     ) -> Result<SibylPID> {
         // build our own (owned) version of the command-line string
         // when Command::get_program and Command::get_args are stable, we won't have to do this
-        let mut cmdline = program.clone();
+        let mut cmdline = program.to_string();
         for arg in args {
             cmdline.push_str(&arg.clone());
         }
