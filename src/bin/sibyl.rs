@@ -50,9 +50,11 @@ fn build_request(matches: &ArgMatches) -> Option<Request> {
     if let Some(matches) = matches.subcommand_matches("once") {
         command = Box::new(CmdOnce::from(matches));
     } else if matches.subcommand_matches("latest").is_some() {
-        command = Box::new(CmdLatest)
+        command = Box::new(CmdLatest);
     } else if matches.subcommand_matches("ping").is_some() {
-        command = Box::new(CmdPing)
+        command = Box::new(CmdPing);
+    } else if let Some(matches) = matches.subcommand_matches("status") {
+        command = Box::new(CmdStatus::from(matches));
     } else {
         return None;
     }

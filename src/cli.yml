@@ -14,7 +14,14 @@ subcommands:
   - latest:
       about: prints the latest log in the default log directory
       version: "0.1.0"
-
   - ping:
       about: gets a reply from the server
       version: "0.1.0"
+  - status:
+      about: gets the status of a process by its pid
+      version: "0.1.0"
+      args:
+        - pid:
+            help: the sibyl pid to get the status of
+            required: true
+            index: 1
