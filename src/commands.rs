@@ -141,3 +141,32 @@ impl Action for CmdPing {
         })
     }
 }
+
+#[derive(Serialize, Deserialize)]
+pub struct CmdStatus {
+    pub pid: u32,
+}
+
+impl From<&ArgMatches<'_>> for CmdStatus {
+    fn from(matches: &ArgMatches) -> Self {
+        let pid: u32 = matches.value_of("pid").unwrap().parse()
+            .expect("failed to parse pid as integer!");
+        CmdStatus {
+            pid,
+        }
+    }
+}
+
+#[typetag::serde]
+impl Action for CmdStatus {
+    fn execute(&self, _req: &Request, ctx: &mut CommandContext) -> Result<Response> {
+        Ok(match ctx.prochandler.get_process_status(self.pid) {
+            Some(status) => Response {
+                msg: format!("{}", status),
+            },
+            None => Response {
+                msg: format!("no process found with pid {}", self.pid),
+            }
+        })
+    }
+}
