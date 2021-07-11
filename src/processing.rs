@@ -1,5 +1,6 @@
 use anyhow::Result;
 use chrono::{DateTime, Local};
+use std::ffi::{OsString, OsStr};
 use std::fmt;
 use std::process::{Child, Command};
 
@@ -7,7 +8,7 @@ pub type SibylPID = u32;
 
 /// bundles a command and a child, along with any other information that needs to be kept track-of
 pub struct SibylProcess {
-    pub cmdline: String,
+    pub cmdline: OsString,
     pub command: Command,
     pub child: Child,
     pub started: DateTime<Local>,
@@ -32,7 +33,7 @@ impl fmt::Display for ProcessWaitStatus {
 }
 
 pub struct ProcessStatus {
-    pub cmdline: String,
+    pub cmdline: OsString,
     pub started: DateTime<Local>,
     pub internal_pid: SibylPID,
     pub os_pid: u32,
@@ -42,7 +43,7 @@ pub struct ProcessStatus {
 impl fmt::Display for ProcessStatus {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "process status for ({})\n", self.internal_pid)?;
-        write!(f, "  command line : {}\n", self.cmdline)?;
+        write!(f, "  command line : {}\n", self.cmdline.to_str().unwrap())?;
         write!(f, "  started at   : {}\n", self.started)?;
         write!(f, "  OS PID       : {}\n", self.os_pid)?;
         write!(f, "  wait status  : {}\n", self.status)
@@ -70,15 +71,15 @@ impl ProcessHandler {
     /// * `cmd` - a Command structure to spawn from
     pub fn create_process(
         &mut self,
-        program: &str,
-        args: &[String],
+        program: &OsStr,
+        args: &Vec<OsString>,
         mut command: Command,
     ) -> Result<SibylPID> {
         // build our own (owned) version of the command-line string
         // when Command::get_program and Command::get_args are stable, we won't have to do this
-        let mut cmdline = program.to_string();
+        let mut cmdline = OsString::from(program);
         for arg in args {
-            cmdline.push_str(&arg.clone());
+            cmdline.push(&arg.clone());
         }
 
         let child = command.spawn()?;

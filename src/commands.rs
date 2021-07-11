@@ -5,6 +5,7 @@ use anyhow::{Context, Result};
 use chrono::Utc;
 use clap::ArgMatches;
 use serde::{Deserialize, Serialize};
+use std::ffi::{OsStr, OsString};
 use std::fs::{metadata, read_dir, OpenOptions};
 use std::io::Read;
 use std::path::PathBuf;
@@ -32,8 +33,8 @@ pub trait Action {
 /// with output logged and stored in a temporary file
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CmdOnce {
-    pub program: String,
-    pub args: Vec<String>,
+    pub program: OsString,
+    pub args: Vec<OsString>,
 }
 
 // implement the ability to create a CmdOnce from clap's ArgMatches
@@ -43,10 +44,12 @@ impl From<&ArgMatches<'_>> for CmdOnce {
         let cmdline = matches.values_of("cmd").unwrap().collect::<Vec<_>>();
 
         let (program, args) = cmdline.split_at(1);
+        let program: OsString = OsString::from(program[0]);
+        let args: Vec<OsString> = args.iter().map(|s| OsString::from(s)).collect();
 
         CmdOnce {
-            program: program[0].to_string(),
-            args: args.to_vec().iter().map(|s| s.to_string()).collect(),
+            program,
+            args,
         }
     }
 }
@@ -54,14 +57,23 @@ impl From<&ArgMatches<'_>> for CmdOnce {
 // implement LogName for Once since it requires the ability to create logfiles
 impl LogName for CmdOnce {
     fn log_name(&self) -> PathBuf {
-        let mut v: Vec<&str> = vec![&self.program];
-        let mut args: Vec<&str> = self.args.iter().map(|s| s.as_str()).collect();
+        let mut v: Vec<&OsStr> = vec![&self.program];
+        let mut args: Vec<&OsStr> = self.args.iter().map(|s| s.as_os_str()).collect();
         v.append(&mut args);
 
-        let mut path = PathBuf::new();
-        path.push(v.join("_"));
+        let mut filename = OsString::new();
+        if v.len() == 1 {
+            filename.push(v[0]);
+        } else {
+            for i in 0..v.len() - 2 {
+                filename.push(v[i]);
+                filename.push("_");
+            }
+            filename.push(v[args.len() - 1]);
+        }
 
-        path
+
+        PathBuf::from(filename)
     }
 }
 
@@ -83,7 +95,7 @@ impl Action for CmdOnce {
         Ok(Response {
             msg: format!(
                 "successfully executed process: {} | sibyl pid: {}",
-                &self.program, pid
+                &self.program.to_str().unwrap(), pid
             ),
         })
     }
