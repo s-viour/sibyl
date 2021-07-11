@@ -86,7 +86,8 @@ impl LogName for CmdOnce {
 #[typetag::serde]
 impl Action for CmdOnce {
     fn execute(&self, _req: &Request, ctx: &mut CommandContext) -> Result<Response> {
-        let output_file = ctx.loghandler.create_log(self)?.open()?;
+        let logfile = ctx.loghandler.create_log(self)?;
+        let output_file = logfile.open()?;
 
         let mut cmd = Command::new(&self.program);
         cmd.args(&self.args)
@@ -95,7 +96,7 @@ impl Action for CmdOnce {
 
         let pid = ctx
             .prochandler
-            .create_process(&self.program, &self.args, cmd)
+            .create_process(&self.program, &self.args, logfile.get_path(), cmd)
             .context("failed to create process!")?;
 
         Ok(Response {

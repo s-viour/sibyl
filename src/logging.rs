@@ -30,6 +30,10 @@ impl LogFile {
 
         Ok(f)
     }
+
+    pub fn get_path(&self) -> &Path {
+        self.path.as_path()
+    }
 }
 
 /// state structure for the log handler

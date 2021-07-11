@@ -2,6 +2,7 @@ use anyhow::Result;
 use chrono::{DateTime, Local};
 use std::ffi::{OsString, OsStr};
 use std::fmt;
+use std::path::{Path, PathBuf};
 use std::process::{Child, Command};
 
 pub type SibylPID = u32;
@@ -13,6 +14,7 @@ pub struct SibylProcess {
     pub child: Child,
     pub started: DateTime<Local>,
     pub pid: SibylPID,
+    pub log_file: PathBuf,
 }
 
 pub enum ProcessWaitStatus {
@@ -38,6 +40,7 @@ pub struct ProcessStatus {
     pub internal_pid: SibylPID,
     pub os_pid: u32,
     pub status: ProcessWaitStatus,
+    pub log_path: PathBuf,
 }
 
 impl fmt::Display for ProcessStatus {
@@ -46,7 +49,8 @@ impl fmt::Display for ProcessStatus {
         write!(f, "  command line : {}\n", self.cmdline.to_str().unwrap())?;
         write!(f, "  started at   : {}\n", self.started)?;
         write!(f, "  OS PID       : {}\n", self.os_pid)?;
-        write!(f, "  wait status  : {}\n", self.status)
+        write!(f, "  wait status  : {}\n", self.status)?;
+        write!(f, "  log file     : {}\n", self.log_path.display())
     }
 }
 
@@ -73,6 +77,7 @@ impl ProcessHandler {
         &mut self,
         program: &OsStr,
         args: &Vec<OsString>,
+        log_path: &Path,
         mut command: Command,
     ) -> Result<SibylPID> {
         // build our own (owned) version of the command-line string
@@ -90,6 +95,7 @@ impl ProcessHandler {
             child,
             started: Local::now(),
             pid: self.count,
+            log_file: PathBuf::from(log_path),
         };
         self.processes.push(proc);
 
@@ -112,6 +118,7 @@ impl ProcessHandler {
                 Ok(None) => ProcessWaitStatus::Running(os_pid),
                 Err(_) => ProcessWaitStatus::Unknown,
             };
+            let log_path = proc.log_file.clone();
 
             Some(ProcessStatus {
                 cmdline,
@@ -119,6 +126,7 @@ impl ProcessHandler {
                 internal_pid,
                 os_pid,
                 status,
+                log_path,
             })
         } else {
             None
