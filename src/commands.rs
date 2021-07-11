@@ -2,7 +2,7 @@ use crate::logging::{LogHandler, LogName};
 use crate::processing::ProcessHandler;
 use crate::{Request, Response};
 use anyhow::{Context, Result};
-use chrono::Utc;
+use chrono::{Local, Utc};
 use clap::ArgMatches;
 use serde::{Deserialize, Serialize};
 use std::ffi::{OsStr, OsString};
@@ -71,6 +71,12 @@ impl LogName for CmdOnce {
             }
             filename.push(v[args.len() - 1]);
         }
+        let timestamp = format!("_{}", Local::now());
+        let timestamp: String = timestamp.chars().map(|c| match c {
+            ' ' => '-',
+            _ => c,
+        }).collect();
+        filename.push(timestamp);
 
 
         PathBuf::from(filename)
