@@ -45,7 +45,7 @@ impl From<&ArgMatches<'_>> for CmdOnce {
 
         let (program, args) = cmdline.split_at(1);
         let program: OsString = OsString::from(program[0]);
-        let args: Vec<OsString> = args.iter().map(|s| OsString::from(s)).collect();
+        let args: Vec<OsString> = args.iter().map(OsString::from).collect();
 
         CmdOnce { program, args }
     }
@@ -62,8 +62,8 @@ impl LogName for CmdOnce {
         if v.len() == 1 {
             filename.push(v[0]);
         } else {
-            for i in 0..v.len() - 2 {
-                filename.push(v[i]);
+            for arg in v.iter().take(v.len() - 2) {
+                filename.push(arg);
                 filename.push("_");
             }
             filename.push(v[args.len() - 1]);

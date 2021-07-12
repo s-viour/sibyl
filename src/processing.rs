@@ -45,12 +45,12 @@ pub struct ProcessStatus {
 
 impl fmt::Display for ProcessStatus {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "process status for ({})\n", self.internal_pid)?;
-        write!(f, "  command line : {}\n", self.cmdline.to_str().unwrap())?;
-        write!(f, "  started at   : {}\n", self.started)?;
-        write!(f, "  OS PID       : {}\n", self.os_pid)?;
-        write!(f, "  wait status  : {}\n", self.status)?;
-        write!(f, "  log file     : {}\n", self.log_path.display())
+        writeln!(f, "process status for ({})", self.internal_pid)?;
+        writeln!(f, "  command line : {}", self.cmdline.to_str().unwrap())?;
+        writeln!(f, "  started at   : {}", self.started)?;
+        writeln!(f, "  OS PID       : {}", self.os_pid)?;
+        writeln!(f, "  wait status  : {}", self.status)?;
+        writeln!(f, "  log file     : {}", self.log_path.display())
     }
 }
 
@@ -76,7 +76,7 @@ impl ProcessHandler {
     pub fn create_process(
         &mut self,
         program: &OsStr,
-        args: &Vec<OsString>,
+        args: &[OsString],
         log_path: &Path,
         mut command: Command,
     ) -> Result<SibylPID> {
@@ -110,7 +110,7 @@ impl ProcessHandler {
         let proc = self.processes.iter_mut().find(|proc| proc.pid == pid);
         if let Some(proc) = proc {
             let cmdline = proc.cmdline.clone();
-            let started = proc.started.clone();
+            let started = proc.started;
             let internal_pid = pid;
             let os_pid = proc.child.id();
             let status = match proc.child.try_wait() {
@@ -131,5 +131,11 @@ impl ProcessHandler {
         } else {
             None
         }
+    }
+}
+
+impl Default for ProcessHandler {
+    fn default() -> Self {
+        Self::new()
     }
 }
