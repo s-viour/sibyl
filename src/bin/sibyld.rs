@@ -1,5 +1,4 @@
 extern crate anyhow;
-extern crate ctrlc;
 extern crate dirs;
 #[macro_use]
 extern crate log;
@@ -9,26 +8,15 @@ use sibyl::commands::CommandContext;
 use sibyl::logging::LogHandler;
 use sibyl::processing::ProcessHandler;
 use sibyl::{Client, Request, Response};
-use std::os::unix::net::UnixListener;
+use std::net::TcpListener;
 
 fn main() -> Result<()> {
     // use environment variable SIBYL_LOG for loglevel settings
     env_logger::Builder::from_env("SIBYL_LOG").init();
 
     let listener =
-        UnixListener::bind("/tmp/sibyl.sock").context("failed to create listener socket")?;
-    info!("created listener socket at /tmp/sibyl.sock!");
-
-    // handle ctrlc by removing the socket file and quitting
-    ctrlc::set_handler(move || {
-        warn!("exiting via ctrl+c is not recommended!");
-
-        std::fs::remove_file("/tmp/sibyl.sock").expect(
-            "failed to remove socket file! did you delete it while the process was running?",
-        );
-        std::process::exit(0);
-    })
-    .context("failed to set ctrlc handler!")?;
+        TcpListener::bind("127.0.0.1:52352").context("failed to create TCP listener")?;
+    info!("bound to port 52352!");
 
     // get (or create, if it does not exist) the log directory
     let mut path = dirs::data_local_dir().unwrap();

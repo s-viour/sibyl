@@ -13,7 +13,7 @@ use chrono::{DateTime, Utc};
 use commands::*;
 use serde::{Deserialize, Serialize};
 use std::io::{Read, Write};
-use std::os::unix::net::UnixStream;
+use std::net::TcpStream;
 
 /// structure containing all information that *might* be required by the server to fufill a command
 ///
@@ -33,11 +33,11 @@ pub struct Response {
     pub msg: String,
 }
 
-/// helper structure that represents a connection over a UnixStream (windows IPC not supported yet)
+/// helper structure that represents a connection over a TcpStream (windows IPC not supported yet)
 ///
 /// has convenience methods for sending and receiving requests and responses
 pub struct Client {
-    connection: UnixStream,
+    connection: TcpStream,
 }
 
 impl Client {
@@ -45,13 +45,13 @@ impl Client {
     ///
     /// returns a Result<Client>
     pub fn connect() -> Result<Client> {
-        let connection = UnixStream::connect("/tmp/sibyl.sock")?;
+        let connection = TcpStream::connect("127.0.0.1:52352")?;
 
         Ok(Client { connection })
     }
 
-    /// creates a client by taking ownership of an already-existing UnixStream struct
-    pub fn from_stream(connection: UnixStream) -> Client {
+    /// creates a client by taking ownership of an already-existing TcpStream struct
+    pub fn from_stream(connection: TcpStream) -> Client {
         Client { connection }
     }
 
@@ -83,9 +83,9 @@ impl Client {
 /// helper function in this module for sending a request/response
 ///
 /// # Arguments
-/// * `stream` - the UnixStream to send the bytes over
+/// * `stream` - the TcpStream to send the bytes over
 /// * `msg` - a Vec of bytes to send
-fn send_reqres(stream: &mut UnixStream, msg: &[u8]) -> Result<()> {
+fn send_reqres(stream: &mut TcpStream, msg: &[u8]) -> Result<()> {
     let size: Vec<u8> = bincode::serialize(&msg.len())?;
 
     stream.write_all(&size)?;
@@ -97,8 +97,8 @@ fn send_reqres(stream: &mut UnixStream, msg: &[u8]) -> Result<()> {
 /// helper function in this module for blocking and receiving a request/response
 ///
 /// # Arguments
-/// * `stream` - the UnixStream to read over
-fn read_reqres(stream: &mut UnixStream) -> Result<Vec<u8>> {
+/// * `stream` - the TcpStream to read over
+fn read_reqres(stream: &mut TcpStream) -> Result<Vec<u8>> {
     let mut size_buffer: [u8; 8] = [0; 8];
     stream.read_exact(&mut size_buffer)?;
     let size: usize = bincode::deserialize(&size_buffer)?;
