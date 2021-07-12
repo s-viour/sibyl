@@ -47,10 +47,7 @@ impl From<&ArgMatches<'_>> for CmdOnce {
         let program: OsString = OsString::from(program[0]);
         let args: Vec<OsString> = args.iter().map(|s| OsString::from(s)).collect();
 
-        CmdOnce {
-            program,
-            args,
-        }
+        CmdOnce { program, args }
     }
 }
 
@@ -72,12 +69,14 @@ impl LogName for CmdOnce {
             filename.push(v[args.len() - 1]);
         }
         let timestamp = format!("_{}", Local::now());
-        let timestamp: String = timestamp.chars().map(|c| match c {
-            ' ' => '-',
-            _ => c,
-        }).collect();
+        let timestamp: String = timestamp
+            .chars()
+            .map(|c| match c {
+                ' ' => '-',
+                _ => c,
+            })
+            .collect();
         filename.push(timestamp);
-
 
         PathBuf::from(filename)
     }
@@ -102,7 +101,8 @@ impl Action for CmdOnce {
         Ok(Response {
             msg: format!(
                 "successfully executed process: {} | sibyl pid: {}",
-                &self.program.to_str().unwrap(), pid
+                &self.program.to_str().unwrap(),
+                pid
             ),
         })
     }
@@ -168,11 +168,12 @@ pub struct CmdStatus {
 
 impl From<&ArgMatches<'_>> for CmdStatus {
     fn from(matches: &ArgMatches) -> Self {
-        let pid: u32 = matches.value_of("pid").unwrap().parse()
+        let pid: u32 = matches
+            .value_of("pid")
+            .unwrap()
+            .parse()
             .expect("failed to parse pid as integer!");
-        CmdStatus {
-            pid,
-        }
+        CmdStatus { pid }
     }
 }
 
@@ -185,7 +186,7 @@ impl Action for CmdStatus {
             },
             None => Response {
                 msg: format!("no process found with pid {}", self.pid),
-            }
+            },
         })
     }
 }

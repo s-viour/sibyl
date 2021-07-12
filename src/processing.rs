@@ -1,6 +1,6 @@
 use anyhow::Result;
 use chrono::{DateTime, Local};
-use std::ffi::{OsString, OsStr};
+use std::ffi::{OsStr, OsString};
 use std::fmt;
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command};
@@ -29,7 +29,7 @@ impl fmt::Display for ProcessWaitStatus {
             ProcessWaitStatus::Running(p) => write!(f, "running (pid {})", p),
             ProcessWaitStatus::Exited(Some(p)) => write!(f, "exited (exit code {})", p),
             ProcessWaitStatus::Exited(None) => write!(f, "exited (no exit code)"),
-            ProcessWaitStatus::Unknown => write!(f, "unknown")
+            ProcessWaitStatus::Unknown => write!(f, "unknown"),
         }
     }
 }
