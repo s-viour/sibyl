@@ -55,6 +55,8 @@ fn build_request(matches: &ArgMatches) -> Option<Request> {
         command = Box::new(CmdPing);
     } else if let Some(matches) = matches.subcommand_matches("status") {
         command = Box::new(CmdStatus::from(matches));
+    } else if matches.subcommand_matches("list").is_some() {
+        command = Box::new(CmdList);
     } else {
         return None;
     }

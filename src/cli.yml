@@ -25,3 +25,6 @@ subcommands:
             help: the sibyl pid to get the status of
             required: true
             index: 1
+  - list:
+      about: lists all processes ever tracked by sibyl
+      version: "0.1.0"

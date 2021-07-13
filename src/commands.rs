@@ -5,6 +5,7 @@ use anyhow::{Context, Result};
 use chrono::{Local, Utc};
 use clap::ArgMatches;
 use serde::{Deserialize, Serialize};
+use std::fmt::Write;
 use std::ffi::{OsStr, OsString};
 use std::fs::{metadata, read_dir, OpenOptions};
 use std::io::Read;
@@ -187,6 +188,24 @@ impl Action for CmdStatus {
             None => Response {
                 msg: format!("no process found with pid {}", self.pid),
             },
+        })
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct CmdList;
+
+#[typetag::serde]
+impl Action for CmdList {
+    fn execute(&self, _req: &Request, ctx: &mut CommandContext) -> Result<Response> {
+        let mut msg = format!("list of processes:\n");
+        
+        for proc in ctx.prochandler.all_processes() {
+            writeln!(&mut msg, "  SPID: {} - {}", proc.pid, proc.cmdline.to_str().unwrap())?;
+        }
+
+        Ok(Response {
+            msg,
         })
     }
 }

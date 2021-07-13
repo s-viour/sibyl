@@ -132,6 +132,10 @@ impl ProcessHandler {
             None
         }
     }
+
+    pub fn all_processes(&self) -> &[SibylProcess] {
+        &self.processes.as_slice()
+    }
 }
 
 impl Default for ProcessHandler {
