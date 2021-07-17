@@ -209,3 +209,45 @@ impl Action for CmdList {
         })
     }
 }
+
+#[derive(Serialize, Deserialize)]
+pub struct CmdLog {
+    pub pid: u32,
+}
+
+impl From<&ArgMatches<'_>> for CmdLog {
+    fn from(matches: &ArgMatches) -> Self {
+        let pid = matches.value_of("pid")
+            .unwrap()
+            .parse()
+            .expect("failed to parse pid as integer!");
+        CmdLog { pid, } 
+    }
+}
+
+#[typetag::serde]
+impl Action for CmdLog {
+    fn execute(&self, _req: &Request, ctx: &mut CommandContext) -> Result<Response> {
+        let proc = match ctx.prochandler.get_process_by_pid(self.pid) {
+            Some(proc) => proc,
+            None => return Ok(Response {
+                msg: format!("no process with SPID {}", self.pid)
+            }),
+        };
+
+        let mut logfile = OpenOptions::new()
+            .read(true)
+            .write(false)
+            .open(&proc.log_file)
+            .context("failed to open logfile")?;
+        
+        let mut msg = Vec::new();
+        logfile.read_to_end(&mut msg)
+            .context("failed to read logfile")?;
+
+        Ok(Response {
+            msg: String::from_utf8(msg)?,
+        })
+
+    }
+}

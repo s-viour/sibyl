@@ -28,3 +28,12 @@ subcommands:
   - list:
       about: lists all processes ever tracked by sibyl
       version: "0.1.0"
+
+  - log:
+      about: retrieves the logs for a PID
+      version: "0.1.0"
+      args:
+        - pid:
+            help: the sibyl pid to retrieve logs for
+            required: true
+            index: 1
