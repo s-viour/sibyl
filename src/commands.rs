@@ -74,6 +74,7 @@ impl LogName for CmdOnce {
             .chars()
             .map(|c| match c {
                 ' ' => '-',
+                ':' => '-',
                 _ => c,
             })
             .collect();
